@@ -1,0 +1,36 @@
+services:
+  db-mock:
+    build: ./database
+    volumes:
+      - shared-data:/data
+    restart: always
+
+  backend-api:
+    build: ./backend
+    volumes:
+      - shared-data:/data
+    depends_on:
+      - db-mock
+    restart: on-failure
+
+  health-checker:
+    build: ./monitor
+    volumes:
+      - shared-data:/data
+    depends_on:
+      - backend-api
+    restart: always
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:3000"
+    volumes:
+      - shared-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - health-checker
+    restart: unless-stopped
+
+volumes:
+  shared-data:
